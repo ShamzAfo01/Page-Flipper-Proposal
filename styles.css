@@ -10,9 +10,10 @@ body {
   font-family: 'Geist', system-ui, sans-serif;
   display: flex;
   justify-content: center;
-  align-items: center; /* Center vertically */
+  align-items: flex-start; /* let the book sit from the top so it remains visible */
   min-height: 100vh;
-  overflow: hidden; /* Hide overflow to keep fixed 'book' feel */
+  overflow: auto; /* allow scrolling when scaled content is larger than viewport */
+  padding: 40px; /* breathing room on small viewports */
 }
 
 /* Scaler container to fit the design */
@@ -22,6 +23,10 @@ body {
   justify-content: center;
   align-items: center;
   box-shadow: 0 30px 60px rgba(0,0,0,0.2); /* Enhance book feel */
+  width: 100%;
+  max-width: 100%;
+  overflow: visible; /* so scaled children aren't clipped */
+  will-change: transform;
 }
 
 /* === COVER PAGE === */

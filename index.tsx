@@ -66,6 +66,7 @@ const generateAuditMock = async (productName: string): Promise<AuditData> => {
 
 // --- Page 0: Cover Page ---
 const CoverPage = ({ onNext }: { onNext: () => void }) => {
+  console.log('CoverPage rendered');
   return (
     <div className="cover-root" onClick={onNext} style={{ cursor: 'pointer' }}>
       
@@ -143,7 +144,7 @@ const CoverPage = ({ onNext }: { onNext: () => void }) => {
 };
 
 // --- Page 1: Intro / Stats Page ---
-const StatsPage1 = ({ onNext, onPrev }: { onNext: () => void, onPrev: () => void }) => {
+const StatsPage1 = ({ onNext, onPrev, onOpenCover }: { onNext: () => void; onPrev: () => void; onOpenCover?: () => void }) => {
   return (
     <div className="page1-root">
       {/* Page number */}
@@ -214,6 +215,15 @@ const StatsPage1 = ({ onNext, onPrev }: { onNext: () => void, onPrev: () => void
       {/* Next page CTA */}
       <div className="page1-next" onClick={onNext}>
         <span className="page1-next-text">Click Here to Next Page</span>
+        <div className="page1-next-arrow">
+          <span className="page1-next-arrow-line"></span>
+          <span className="page1-next-arrow-head"></span>
+        </div>
+      </div>
+
+      {/* Open Cover CTA - New Button */}
+      <div className="page1-next" onClick={() => onOpenCover && onOpenCover()} style={{ left: 'auto', right: '80px', top: '1817px', width: 'auto', gap: '20px', zIndex: 10 }}>
+        <span className="page1-next-text" style={{marginRight: '0'}}>Open Cover</span>
         <div className="page1-next-arrow">
           <span className="page1-next-arrow-line"></span>
           <span className="page1-next-arrow-head"></span>
@@ -737,15 +747,15 @@ const AuditPage = ({ onGoHome, onPrev, onOpenCover }: { onGoHome: () => void, on
 
 // --- Main App: Handles Routing/Scaling ---
 const App = () => {
-  const [currentPage, setCurrentPage] = useState<0 | 1 | 2 | 3 | 4 | 5 | 6 | 7>(1);
+  const [currentPage, setCurrentPage] = useState<0 | 1 | 2 | 3 | 4 | 5 | 6 | 7>(0); // show cover by default
   const [scale, setScale] = useState(1);
 
   useEffect(() => {
     const handleResize = () => {
       // Dimensions of the content book
-      const bookWidth = 1699; 
+      const bookWidth = 1699;
       const bookHeight = 1960;
-      
+
       // Target: 3/4 width of viewport, 4/5 height of viewport
       const targetWidth = window.innerWidth * 0.75;
       const targetHeight = window.innerHeight * 0.8;
@@ -753,70 +763,81 @@ const App = () => {
       // Calculate scale to fit EITHER width OR height constraint
       const scaleW = targetWidth / bookWidth;
       const scaleH = targetHeight / bookHeight;
-      
+
       // Use the smaller scale to ensure it fits both constraints
-      const newScale = Math.min(scaleW, scaleH);
-      
+      let newScale = Math.min(scaleW, scaleH, 1);
+      if (!isFinite(newScale) || Number.isNaN(newScale)) newScale = 0.6;
+      // Clamp to sensible range so it's visible on small screens
+      newScale = Math.max(0.35, newScale);
+
       setScale(newScale);
     };
-    
+
     window.addEventListener('resize', handleResize);
     handleResize(); // Initial call
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
   return (
-    <div className="scaler-container" style={{ transform: `scale(${scale})` }}>
-      {currentPage === 0 && (
-        <CoverPage
-          onNext={() => setCurrentPage(1)}
-        />
-      )}
-      {currentPage === 1 && (
-        <StatsPage1 
-          onNext={() => setCurrentPage(2)}
-          onPrev={() => setCurrentPage(0)}
-        />
-      )}
-      {currentPage === 2 && (
-        <StatsPage2
-          onNext={() => setCurrentPage(3)}
-          onPrev={() => setCurrentPage(1)}
-        />
-      )}
-      {currentPage === 3 && (
-        <StatsPage3
-          onNext={() => setCurrentPage(4)}
-          onPrev={() => setCurrentPage(2)}
-        />
-      )}
-      {currentPage === 4 && (
-        <StatsPage4
-          onNext={() => setCurrentPage(5)}
-          onPrev={() => setCurrentPage(3)}
-        />
-      )}
-      {currentPage === 5 && (
-        <StatsPage5
-          onNext={() => setCurrentPage(6)}
-          onPrev={() => setCurrentPage(4)}
-        />
-      )}
-      {currentPage === 6 && (
-        <StatsPage6
-          onNext={() => setCurrentPage(7)}
-          onPrev={() => setCurrentPage(5)}
-          onGoToCover={() => setCurrentPage(0)}
-        />
-      )}
-      {currentPage === 7 && (
-        <AuditPage 
-          onGoHome={() => setCurrentPage(1)} 
-          onPrev={() => setCurrentPage(6)}
-          onOpenCover={() => setCurrentPage(0)}
-        />
-      )}
-    </div>
+    <>
+      {/* Unscaled overlay to help debug rendering issues (always visible) */}
+      <div id="app-overlay" style={{position: 'fixed', left: 12, top: 12, zIndex: 99999, padding: '8px 10px', background: 'rgba(0,0,0,0.7)', color: '#fff', fontFamily: 'system-ui, sans-serif', fontSize: 13, borderRadius: 6}}>
+        App: page {String(currentPage)} • scale {Number((scale || 0).toFixed(2))}
+      </div>
+
+      <div className="scaler-container" style={{ transform: `scale(${scale})` }}>
+        {currentPage === 0 && (
+          <CoverPage
+            onNext={() => setCurrentPage(1)}
+          />
+        )}
+        {currentPage === 1 && (
+          <StatsPage1 
+            onNext={() => setCurrentPage(2)}
+            onPrev={() => setCurrentPage(0)}
+            onOpenCover={() => setCurrentPage(0)}
+          />
+        )}
+        {currentPage === 2 && (
+          <StatsPage2
+            onNext={() => setCurrentPage(3)}
+            onPrev={() => setCurrentPage(1)}
+          />
+        )}
+        {currentPage === 3 && (
+          <StatsPage3
+            onNext={() => setCurrentPage(4)}
+            onPrev={() => setCurrentPage(2)}
+          />
+        )}
+        {currentPage === 4 && (
+          <StatsPage4
+            onNext={() => setCurrentPage(5)}
+            onPrev={() => setCurrentPage(3)}
+          />
+        )}
+        {currentPage === 5 && (
+          <StatsPage5
+            onNext={() => setCurrentPage(6)}
+            onPrev={() => setCurrentPage(4)}
+          />
+        )}
+        {currentPage === 6 && (
+          <StatsPage6
+            onNext={() => setCurrentPage(7)}
+            onPrev={() => setCurrentPage(5)}
+            onGoToCover={() => setCurrentPage(0)}
+          />
+        )}
+        {currentPage === 7 && (
+          <AuditPage 
+            onGoHome={() => setCurrentPage(1)} 
+            onPrev={() => setCurrentPage(6)}
+            onOpenCover={() => setCurrentPage(0)}
+          />
+        )}
+      </div>
+    </>
   );
 };
 
