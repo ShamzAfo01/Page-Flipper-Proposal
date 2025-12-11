@@ -766,7 +766,7 @@ const AuditPage = ({ onGoHome, onPrev, onOpenCover }: { onGoHome: () => void, on
 
 // --- Main App: Handles Routing/Scaling ---
 const App = () => {
-  const [currentPage, setCurrentPage] = useState<0 | 1 | 2 | 3 | 4 | 5 | 6 | 7>(1);
+  const [currentPage, setCurrentPage] = useState<number>(0);
   const [scale, setScale] = useState(1);
   const [isMobile, setIsMobile] = useState(false);
 
@@ -808,57 +808,42 @@ const App = () => {
     return <MobileBlocker />;
   }
 
+  // Define all pages in an array for the 3D map
+  const pages = [
+    <CoverPage key="p0" onNext={() => setCurrentPage(1)} />,
+    <StatsPage1 key="p1" onNext={() => setCurrentPage(2)} onPrev={() => setCurrentPage(0)} />,
+    <StatsPage2 key="p2" onNext={() => setCurrentPage(3)} onPrev={() => setCurrentPage(1)} />,
+    <StatsPage3 key="p3" onNext={() => setCurrentPage(4)} onPrev={() => setCurrentPage(2)} />,
+    <StatsPage4 key="p4" onNext={() => setCurrentPage(5)} onPrev={() => setCurrentPage(3)} />,
+    <StatsPage5 key="p5" onNext={() => setCurrentPage(6)} onPrev={() => setCurrentPage(4)} />,
+    <StatsPage6 key="p6" onNext={() => setCurrentPage(7)} onPrev={() => setCurrentPage(5)} onGoToCover={() => setCurrentPage(0)} />,
+    <AuditPage key="p7" onGoHome={() => setCurrentPage(1)} onPrev={() => setCurrentPage(6)} onOpenCover={() => setCurrentPage(0)} />
+  ];
+
   return (
-    <div className="scaler-container" style={{ transform: `scale(${scale})` }}>
-      {currentPage === 0 && (
-        <CoverPage
-          onNext={() => setCurrentPage(1)}
-        />
-      )}
-      {currentPage === 1 && (
-        <StatsPage1 
-          onNext={() => setCurrentPage(2)}
-          onPrev={() => setCurrentPage(0)}
-        />
-      )}
-      {currentPage === 2 && (
-        <StatsPage2
-          onNext={() => setCurrentPage(3)}
-          onPrev={() => setCurrentPage(1)}
-        />
-      )}
-      {currentPage === 3 && (
-        <StatsPage3
-          onNext={() => setCurrentPage(4)}
-          onPrev={() => setCurrentPage(2)}
-        />
-      )}
-      {currentPage === 4 && (
-        <StatsPage4
-          onNext={() => setCurrentPage(5)}
-          onPrev={() => setCurrentPage(3)}
-        />
-      )}
-      {currentPage === 5 && (
-        <StatsPage5
-          onNext={() => setCurrentPage(6)}
-          onPrev={() => setCurrentPage(4)}
-        />
-      )}
-      {currentPage === 6 && (
-        <StatsPage6
-          onNext={() => setCurrentPage(7)}
-          onPrev={() => setCurrentPage(5)}
-          onGoToCover={() => setCurrentPage(0)}
-        />
-      )}
-      {currentPage === 7 && (
-        <AuditPage 
-          onGoHome={() => setCurrentPage(1)} 
-          onPrev={() => setCurrentPage(6)}
-          onOpenCover={() => setCurrentPage(0)}
-        />
-      )}
+    <div className="book-shell">
+      <div className="book-scene" style={{ transform: `scale(${scale})` }}>
+        {pages.map((page, index) => {
+          const isCurrent = index === currentPage;
+          const isPast = index < currentPage;
+          const isFuture = index > currentPage;
+
+          let stateClass = "";
+          if (isCurrent) stateClass = "page--current";
+          else if (isPast) stateClass = "page--past";
+          else if (isFuture) stateClass = "page--future";
+
+          return (
+            <div
+              key={index}
+              className={`book-page ${stateClass}`}
+              style={{ zIndex: pages.length - index }}
+            >
+              {page}
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 };

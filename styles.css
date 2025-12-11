@@ -8,20 +8,73 @@ body {
   padding: 0;
   background-color: #f0f0f0; /* Full viewport bg */
   font-family: 'Geist', system-ui, sans-serif;
-  display: flex;
-  justify-content: center;
-  align-items: center; /* Center vertically */
-  min-height: 100vh;
   overflow: hidden; /* Hide overflow to keep fixed 'book' feel */
 }
 
-/* Scaler container to fit the design */
-.scaler-container {
-  transform-origin: center center; /* Center scaling */
+/* === 3D FLIPBOOK ARCHITECTURE === */
+
+/* Shell: Replaces 'scaler-container' as the viewport wrapper */
+.book-shell {
+  width: 100vw;
+  height: 100vh;
   display: flex;
   justify-content: center;
   align-items: center;
-  box-shadow: 0 30px 60px rgba(0,0,0,0.2); /* Enhance book feel */
+  background-color: #f0f0f0;
+  perspective: 2500px; /* Gives the 3D depth */
+  overflow: hidden;
+}
+
+/* Scene: Holds all the pages, handles the scaling */
+.book-scene {
+  position: relative;
+  width: 1699px; /* Base width of your largest page */
+  height: 1960px; /* Base height */
+  transform-style: preserve-3d;
+  transition: transform 0.3s ease; /* Smooth scaling if window resizes */
+}
+
+/* Base class for ALL pages to fit in the scene */
+.book-page {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  transform-origin: center left; /* Pivot point for the "book spine" */
+  transform-style: preserve-3d;
+  backface-visibility: hidden; /* Hide back so we see next page when flipped */
+  
+  /* Smooth animation for the flip */
+  transition: 
+    transform 0.8s cubic-bezier(0.645, 0.045, 0.355, 1.000), 
+    opacity 0.8s cubic-bezier(0.645, 0.045, 0.355, 1.000);
+  
+  /* Shadow for depth */
+  box-shadow: 0 30px 60px rgba(0,0,0,0.2);
+  border-radius: 8px; /* Consistent rounding */
+  background: #fff; /* Fallback */
+}
+
+/* STATE 1: CURRENT PAGE */
+.book-page.page--current {
+  transform: rotateY(0deg);
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* STATE 2: PAST PAGE (Flipped to the left) */
+.book-page.page--past {
+  transform: rotateY(-180deg);
+  opacity: 0; /* Fade out as it flips so we see what's underneath/behind */
+  pointer-events: none;
+}
+
+/* STATE 3: FUTURE PAGE (Stacked behind) */
+.book-page.page--future {
+  transform: rotateY(0deg);
+  opacity: 0; /* Hidden until revealed */
+  pointer-events: none;
 }
 
 /* === MOBILE BLOCKER === */
