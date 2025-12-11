@@ -3,21 +3,16 @@
   box-sizing: border-box;
 }
 
-html, body {
-  height: 100%;
-}
-
 body {
   margin: 0;
   padding: 0;
-  /* Requested global background gradient */
-  background: linear-gradient(to bottom right, #ffffff, #dadada);
+  background-color: #f0f0f0; /* Full viewport bg */
   font-family: 'Geist', system-ui, sans-serif;
   display: flex;
   justify-content: center;
   align-items: center; /* Center vertically */
   min-height: 100vh;
-  overflow: hidden; /* No scrolling — keep the 'book' centered */
+  overflow: hidden; /* Hide overflow to keep fixed 'book' feel */
 }
 
 /* Scaler container to fit the design */
@@ -27,10 +22,71 @@ body {
   justify-content: center;
   align-items: center;
   box-shadow: 0 30px 60px rgba(0,0,0,0.2); /* Enhance book feel */
-  width: auto;
-  height: auto;
-  overflow: visible; /* so scaled children aren't clipped */
-  will-change: transform;
+}
+
+/* === MOBILE BLOCKER === */
+.mobile-root {
+  position: fixed;
+  inset: 0;
+  background-color: #ffffff;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 40px;
+  z-index: 9999;
+}
+
+.mobile-content {
+  text-align: center;
+  margin-bottom: 80px;
+}
+
+.mobile-text {
+  font-weight: 500;
+  font-size: 28px;
+  line-height: 1.4;
+  color: #888888;
+  margin: 0;
+  letter-spacing: -0.02em;
+}
+
+.mobile-brand-group {
+  position: absolute;
+  bottom: 40px;
+  display: flex;
+  flex-direction: row;
+  align-items: flex-end;
+  gap: 12px;
+}
+
+.mobile-brand-name {
+  font-weight: 800;
+  font-size: 40px;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  color: #545454;
+}
+
+.mobile-dot {
+  position: relative;
+  width: 14px;
+  height: 14px;
+  border-radius: 99px;
+  background: linear-gradient(143.57deg, #6f6f6f 12%, #282828 49.43%, #0d0d0d 86.66%);
+  animation: spin-slow 3s linear infinite;
+  margin-bottom: 6px; /* Align visually with text baseline */
+}
+
+.mobile-dot-inner {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  left: 4px;
+  top: 4px;
+  border-radius: 99px;
+  background: #6d6d6d;
+  border: 0.2px solid #868686;
 }
 
 /* === COVER PAGE === */

@@ -5,58 +5,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>UxGeek Audit Generator</title>
     <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <!-- Local stylesheet for Vite dev server -->
-    <link rel="stylesheet" href="/styles.css">
-  </head>
+  <script type="importmap">
+{
+  "imports": {
+    "react": "https://aistudiocdn.com/react@^19.2.1",
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.1/",
+    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.31.0",
+    "react/": "https://aistudiocdn.com/react@^19.2.1/"
+  }
+}
+</script>
+</head>
   <body>
     <div id="root"></div>
-    <noscript>Please enable JavaScript to run this app.</noscript>
     <script type="module" src="/index.tsx"></script>
-
-    <!-- Debug banner: shows JS status and runtime errors to help locate blank page issues -->
-    <script>
-      (function(){
-        const banner = document.createElement('div');
-        banner.id = 'debug-banner';
-        banner.style.position = 'fixed';
-        banner.style.left = '12px';
-        banner.style.top = '12px';
-        banner.style.zIndex = 99999;
-        banner.style.padding = '8px 10px';
-        banner.style.background = 'rgba(200,30,30,0.95)';
-        banner.style.color = '#fff';
-        banner.style.fontFamily = 'system-ui, sans-serif';
-        banner.style.fontSize = '13px';
-        banner.style.borderRadius = '6px';
-        banner.style.boxShadow = '0 6px 18px rgba(0,0,0,0.35)';
-        banner.textContent = 'JS: loading...';
-        document.body.appendChild(banner);
-
-        function setMsg(msg, bg){
-          banner.textContent = msg;
-          if (bg) banner.style.background = bg;
-        }
-
-        window.addEventListener('load', function(){
-          setMsg('JS: loaded (no errors yet)', 'rgba(20,140,20,0.95)');
-          setTimeout(()=> banner.style.display='none', 3000);
-        });
-
-        window.addEventListener('error', function(e){
-          setMsg('JS Error: ' + (e && e.message ? e.message : 'unknown'), 'rgba(200,30,30,0.95)');
-          banner.style.display = 'block';
-        });
-
-        window.addEventListener('unhandledrejection', function(ev){
-          const reason = ev && ev.reason ? (ev.reason.message || JSON.stringify(ev.reason)) : 'unhandled promise rejection';
-          setMsg('Promise Rejection: ' + reason, 'rgba(200,30,30,0.95)');
-          banner.style.display = 'block';
-        });
-
-        // small heartbeat to ensure script runs
-        setMsg('JS: running', 'rgba(20,140,20,0.95)');
-        setTimeout(()=> banner.style.display='none', 1500);
-      })();
-    </script>
   </body>
 </html>
