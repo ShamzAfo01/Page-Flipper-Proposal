@@ -220,15 +220,6 @@ const StatsPage1 = ({ onNext, onPrev, onOpenCover }: { onNext: () => void; onPre
           <span className="page1-next-arrow-head"></span>
         </div>
       </div>
-
-      {/* Open Cover CTA - New Button */}
-      <div className="page1-next" onClick={() => onOpenCover && onOpenCover()} style={{ left: 'auto', right: '80px', top: '1817px', width: 'auto', gap: '20px', zIndex: 10 }}>
-        <span className="page1-next-text" style={{marginRight: '0'}}>Open Cover</span>
-        <div className="page1-next-arrow">
-          <span className="page1-next-arrow-line"></span>
-          <span className="page1-next-arrow-head"></span>
-        </div>
-      </div>
     </div>
   );
 };
@@ -731,16 +722,6 @@ const AuditPage = ({ onGoHome, onPrev, onOpenCover }: { onGoHome: () => void, on
         </div>
         <span className="page1-next-text">Prev Page</span>
       </div>
-
-      {/* Open Cover CTA - New Button */}
-      <div className="page1-next" onClick={onOpenCover} style={{ left: 'auto', right: '80px', top: '1817px', width: 'auto', gap: '20px', zIndex: 10 }}>
-        <span className="page1-next-text" style={{marginRight: '0'}}>Open Cover</span>
-        <div className="page1-next-arrow">
-          <span className="page1-next-arrow-line"></span>
-          <span className="page1-next-arrow-head"></span>
-        </div>
-      </div>
-
     </div>
   );
 };

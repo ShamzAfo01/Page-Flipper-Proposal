@@ -3,17 +3,21 @@
   box-sizing: border-box;
 }
 
+html, body {
+  height: 100%;
+}
+
 body {
   margin: 0;
   padding: 0;
-  background-color: #f0f0f0; /* Full viewport bg */
+  /* Requested global background gradient */
+  background: linear-gradient(to bottom right, #ffffff, #dadada);
   font-family: 'Geist', system-ui, sans-serif;
   display: flex;
   justify-content: center;
-  align-items: flex-start; /* let the book sit from the top so it remains visible */
+  align-items: center; /* Center vertically */
   min-height: 100vh;
-  overflow: auto; /* allow scrolling when scaled content is larger than viewport */
-  padding: 40px; /* breathing room on small viewports */
+  overflow: hidden; /* No scrolling — keep the 'book' centered */
 }
 
 /* Scaler container to fit the design */
@@ -23,8 +27,8 @@ body {
   justify-content: center;
   align-items: center;
   box-shadow: 0 30px 60px rgba(0,0,0,0.2); /* Enhance book feel */
-  width: 100%;
-  max-width: 100%;
+  width: auto;
+  height: auto;
   overflow: visible; /* so scaled children aren't clipped */
   will-change: transform;
 }
