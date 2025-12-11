@@ -1,10 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { createRoot } from 'react-dom/client';
-import { GoogleGenAI, Type, Schema } from "@google/genai";
 import './styles.css';
-
-// Initialize Gemini
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
 // Types for the Generated Audit
 interface Finding {
@@ -24,6 +20,49 @@ interface AuditData {
   uxFindings: Finding[];
   techFindings: Finding[];
 }
+
+// Lightweight mock generator to simulate AI output in the browser.
+const generateAuditMock = async (productName: string): Promise<AuditData> => {
+  await new Promise((r) => setTimeout(r, 600));
+
+  const uxFindings: Finding[] = [
+    {
+      title: 'Confusing mobile navigation',
+      description:
+        'Primary actions are hidden below the fold or inside a menu; make primary CTAs visible and thumb-reachable on mobile.',
+      severity: 'High'
+    },
+    {
+      title: 'Unclear product proof',
+      description:
+        'Users can’t find examples, social proof, or clear onboarding. Add concise proof points and a hero CTA with examples.',
+      severity: 'Medium'
+    }
+  ];
+
+  const techFindings: Finding[] = [
+    {
+      title: 'Slow initial load',
+      description:
+        'Large assets and render-blocking CSS/JS slow first contentful paint. Audit assets and defer noncritical scripts.',
+      severity: 'High'
+    },
+    {
+      title: 'Accessibility gaps',
+      description:
+        'Low contrast and missing ARIA labels on key controls reduce reach. Improve semantics and color contrast.',
+      severity: 'Medium'
+    }
+  ];
+
+  return {
+    productName,
+    executiveSummary: `${productName} shows strong demand but the mobile experience causes large drop-off. This audit highlights UX and technical improvements to increase activation and retention.`,
+    scores: { ux: 62, technical: 58, accessibility: 66 },
+    uxFindings,
+    techFindings
+  };
+};
 
 // --- Page 0: Cover Page ---
 const CoverPage = ({ onNext }: { onNext: () => void }) => {
@@ -553,58 +592,7 @@ const AuditPage = ({ onGoHome, onPrev, onOpenCover }: { onGoHome: () => void, on
     setAuditData(null);
 
     try {
-      const schema: Schema = {
-        type: Type.OBJECT,
-        properties: {
-          productName: { type: Type.STRING },
-          executiveSummary: { type: Type.STRING, description: "A paragraph summarizing the audit." },
-          scores: {
-            type: Type.OBJECT,
-            properties: {
-              ux: { type: Type.INTEGER, description: "Score out of 100" },
-              technical: { type: Type.INTEGER, description: "Score out of 100" },
-              accessibility: { type: Type.INTEGER, description: "Score out of 100" },
-            }
-          },
-          uxFindings: {
-            type: Type.ARRAY,
-            items: {
-              type: Type.OBJECT,
-              properties: {
-                title: { type: Type.STRING },
-                description: { type: Type.STRING },
-                severity: { type: Type.STRING, enum: ["High", "Medium", "Low"] }
-              }
-            }
-          },
-          techFindings: {
-            type: Type.ARRAY,
-            items: {
-              type: Type.OBJECT,
-              properties: {
-                title: { type: Type.STRING },
-                description: { type: Type.STRING },
-                severity: { type: Type.STRING, enum: ["High", "Medium", "Low"] }
-              }
-            }
-          }
-        },
-        required: ["productName", "executiveSummary", "scores", "uxFindings", "techFindings"]
-      };
-
-      const response = await ai.models.generateContent({
-        model: 'gemini-2.5-flash',
-        contents: `Generate a detailed and professional UX & Technical audit summary for "${inputValue}". 
-        Assume you are an expert consultant (UxGeek). 
-        The "scores" should be realistic estimates based on general knowledge or typical issues for this type of product.
-        Provide 2 key UX findings and 2 technical findings.`,
-        config: {
-          responseMimeType: 'application/json',
-          responseSchema: schema,
-        }
-      });
-
-      const data = JSON.parse(response.text);
+      const data = await generateAuditMock(inputValue);
       setAuditData(data);
 
     } catch (error) {
