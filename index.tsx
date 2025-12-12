@@ -1,6 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { createRoot } from 'react-dom/client';
+import { GoogleGenAI, Type, Schema } from "@google/genai";
 import './styles.css';
+
+// Initialize Gemini
+const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
 // Types for the Generated Audit
 interface Finding {
@@ -21,52 +25,25 @@ interface AuditData {
   techFindings: Finding[];
 }
 
-// Lightweight mock generator to simulate AI output in the browser.
-const generateAuditMock = async (productName: string): Promise<AuditData> => {
-  await new Promise((r) => setTimeout(r, 600));
-
-  const uxFindings: Finding[] = [
-    {
-      title: 'Confusing mobile navigation',
-      description:
-        'Primary actions are hidden below the fold or inside a menu; make primary CTAs visible and thumb-reachable on mobile.',
-      severity: 'High'
-    },
-    {
-      title: 'Unclear product proof',
-      description:
-        'Users can’t find examples, social proof, or clear onboarding. Add concise proof points and a hero CTA with examples.',
-      severity: 'Medium'
-    }
-  ];
-
-  const techFindings: Finding[] = [
-    {
-      title: 'Slow initial load',
-      description:
-        'Large assets and render-blocking CSS/JS slow first contentful paint. Audit assets and defer noncritical scripts.',
-      severity: 'High'
-    },
-    {
-      title: 'Accessibility gaps',
-      description:
-        'Low contrast and missing ARIA labels on key controls reduce reach. Improve semantics and color contrast.',
-      severity: 'Medium'
-    }
-  ];
-
-  return {
-    productName,
-    executiveSummary: `${productName} shows strong demand but the mobile experience causes large drop-off. This audit highlights UX and technical improvements to increase activation and retention.`,
-    scores: { ux: 62, technical: 58, accessibility: 66 },
-    uxFindings,
-    techFindings
-  };
+// --- Mobile Blocker Component ---
+const MobileBlocker = () => {
+  return (
+    <div className="mobile-root">
+      <div className="mobile-content">
+        <h1 className="mobile-text">Please open with desktop</h1>
+      </div>
+      <div className="mobile-brand-group">
+        <div className="mobile-brand-name">UxGeek</div>
+        <div className="mobile-dot">
+          <div className="mobile-dot-inner"></div>
+        </div>
+      </div>
+    </div>
+  );
 };
 
 // --- Page 0: Cover Page ---
 const CoverPage = ({ onNext }: { onNext: () => void }) => {
-  console.log('CoverPage rendered');
   return (
     <div className="cover-root" onClick={onNext} style={{ cursor: 'pointer' }}>
       
@@ -121,7 +98,7 @@ const CoverPage = ({ onNext }: { onNext: () => void }) => {
             <path fill="url(#SVGID_2_)" d="M313.7,232.7h14.6v58.6h-14.6v-6.1c-4.4,5.1-10.1,7.7-16.9,7.7c-5.9,0-11-1.4-15.5-3.9   c-4.5-2.7-7.9-6.3-10.4-11c-2.4-4.7-3.7-10-3.7-15.8c0-5.9,1.2-11.2,3.7-15.8c2.4-4.7,5.9-8.3,10.4-11.1c4.5-2.7,9.6-4,15.5-4   c6.8,0,12.5,2.6,16.9,7.7V232.7z M308.9,274.4c3.2-3.3,4.8-7.4,4.8-12.5c0-5-1.6-9.1-4.7-12.3s-7.1-4.8-11.9-4.8   c-4.5,0-8.2,1.6-11.2,5s-4.3,7.4-4.3,12.2c0,4.9,1.5,8.9,4.3,12.3c2.9,3.3,6.6,4.9,11.2,4.9C301.8,279.3,305.7,277.7,308.9,274.4z"/>
             <path fill="url(#SVGID_3_)" d="M376.8,232.7H392l-20.5,58.7c-3,8.1-7.2,14.1-12.6,18.1c-5.3,4-11.6,5.8-19,5.2v-14.1c0.5,0.1,1.2,0.1,2.1,0.1   c6.2,0,11.2-3.8,14.7-11.4L331,232.6h15.6l17.2,37.3L376.8,232.7z"/>
             <path fill="url(#SVGID_4_)" d="M468.6,291.2h-16.3l-6.1-16.5h-32.4l-6.1,16.5h-16.4l30.5-82h16.4L468.6,291.2z M430,231.1l-10.9,29h21.7   L430,231.1z"/>
-            <path fill="url(#SVGID_5_)" d="M470.2,291.2v-82h15.2v82H470.2z"/>
+                        <path fill="url(#SVGID_5_)" d="M470.2,291.2v-82h15.2v82H470.2z"/>
           </g>
           <g>
             <path fill="url(#SVGID_6_)" d="M80.3,243.6l-63.6,31.8c-2.8,1.4-2.8,5.4,0,6.8L80.3,314c1.1,0.5,2.3,0.5,3.4,0l63.6-31.8   c2.8-1.4,2.8-5.4,0-6.8l-63.6-31.8C82.6,243,81.4,243,80.3,243.6z"/>
@@ -144,7 +121,7 @@ const CoverPage = ({ onNext }: { onNext: () => void }) => {
 };
 
 // --- Page 1: Intro / Stats Page ---
-const StatsPage1 = ({ onNext, onPrev, onOpenCover }: { onNext: () => void; onPrev: () => void; onOpenCover?: () => void }) => {
+const StatsPage1 = ({ onNext, onPrev }: { onNext: () => void, onPrev: () => void }) => {
   return (
     <div className="page1-root">
       {/* Page number */}
@@ -593,7 +570,58 @@ const AuditPage = ({ onGoHome, onPrev, onOpenCover }: { onGoHome: () => void, on
     setAuditData(null);
 
     try {
-      const data = await generateAuditMock(inputValue);
+      const schema: Schema = {
+        type: Type.OBJECT,
+        properties: {
+          productName: { type: Type.STRING },
+          executiveSummary: { type: Type.STRING, description: "A paragraph summarizing the audit." },
+          scores: {
+            type: Type.OBJECT,
+            properties: {
+              ux: { type: Type.INTEGER, description: "Score out of 100" },
+              technical: { type: Type.INTEGER, description: "Score out of 100" },
+              accessibility: { type: Type.INTEGER, description: "Score out of 100" },
+            }
+          },
+          uxFindings: {
+            type: Type.ARRAY,
+            items: {
+              type: Type.OBJECT,
+              properties: {
+                title: { type: Type.STRING },
+                description: { type: Type.STRING },
+                severity: { type: Type.STRING, enum: ["High", "Medium", "Low"] }
+              }
+            }
+          },
+          techFindings: {
+            type: Type.ARRAY,
+            items: {
+              type: Type.OBJECT,
+              properties: {
+                title: { type: Type.STRING },
+                description: { type: Type.STRING },
+                severity: { type: Type.STRING, enum: ["High", "Medium", "Low"] }
+              }
+            }
+          }
+        },
+        required: ["productName", "executiveSummary", "scores", "uxFindings", "techFindings"]
+      };
+
+      const response = await ai.models.generateContent({
+        model: 'gemini-2.5-flash',
+        contents: `Generate a detailed and professional UX & Technical audit summary for "${inputValue}". 
+        Assume you are an expert consultant (UxGeek). 
+        The "scores" should be realistic estimates based on general knowledge or typical issues for this type of product.
+        Provide 2 key UX findings and 2 technical findings.`,
+        config: {
+          responseMimeType: 'application/json',
+          responseSchema: schema,
+        }
+      });
+
+      const data = JSON.parse(response.text);
       setAuditData(data);
 
     } catch (error) {
@@ -722,21 +750,41 @@ const AuditPage = ({ onGoHome, onPrev, onOpenCover }: { onGoHome: () => void, on
         </div>
         <span className="page1-next-text">Prev Page</span>
       </div>
+
+      {/* Open Cover CTA - New Button */}
+      <div className="page1-next" onClick={onOpenCover} style={{ left: 'auto', right: '80px', top: '1817px', width: 'auto', gap: '20px', zIndex: 10 }}>
+        <span className="page1-next-text" style={{marginRight: '0'}}>Open Cover</span>
+        <div className="page1-next-arrow">
+          <span className="page1-next-arrow-line"></span>
+          <span className="page1-next-arrow-head"></span>
+        </div>
+      </div>
+
     </div>
   );
 };
 
 // --- Main App: Handles Routing/Scaling ---
 const App = () => {
-  const [currentPage, setCurrentPage] = useState<0 | 1 | 2 | 3 | 4 | 5 | 6 | 7>(0); // show cover by default
+  const [currentPage, setCurrentPage] = useState<number>(0);
   const [scale, setScale] = useState(1);
+  const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
     const handleResize = () => {
-      // Dimensions of the content book
-      const bookWidth = 1699;
-      const bookHeight = 1960;
+      const width = window.innerWidth;
+      
+      // Check if mobile (width < 1024px)
+      if (width < 1024) {
+        setIsMobile(true);
+        return; // Don't calculate scale if mobile
+      }
+      setIsMobile(false);
 
+      // Dimensions of the content book
+      const bookWidth = 1699; 
+      const bookHeight = 1960;
+      
       // Target: 3/4 width of viewport, 4/5 height of viewport
       const targetWidth = window.innerWidth * 0.75;
       const targetHeight = window.innerHeight * 0.8;
@@ -744,81 +792,59 @@ const App = () => {
       // Calculate scale to fit EITHER width OR height constraint
       const scaleW = targetWidth / bookWidth;
       const scaleH = targetHeight / bookHeight;
-
+      
       // Use the smaller scale to ensure it fits both constraints
-      let newScale = Math.min(scaleW, scaleH, 1);
-      if (!isFinite(newScale) || Number.isNaN(newScale)) newScale = 0.6;
-      // Clamp to sensible range so it's visible on small screens
-      newScale = Math.max(0.35, newScale);
-
+      const newScale = Math.min(scaleW, scaleH);
+      
       setScale(newScale);
     };
-
+    
     window.addEventListener('resize', handleResize);
     handleResize(); // Initial call
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  return (
-    <>
-      {/* Unscaled overlay to help debug rendering issues (always visible) */}
-      <div id="app-overlay" style={{position: 'fixed', left: 12, top: 12, zIndex: 99999, padding: '8px 10px', background: 'rgba(0,0,0,0.7)', color: '#fff', fontFamily: 'system-ui, sans-serif', fontSize: 13, borderRadius: 6}}>
-        App: page {String(currentPage)} • scale {Number((scale || 0).toFixed(2))}
-      </div>
+  if (isMobile) {
+    return <MobileBlocker />;
+  }
 
-      <div className="scaler-container" style={{ transform: `scale(${scale})` }}>
-        {currentPage === 0 && (
-          <CoverPage
-            onNext={() => setCurrentPage(1)}
-          />
-        )}
-        {currentPage === 1 && (
-          <StatsPage1 
-            onNext={() => setCurrentPage(2)}
-            onPrev={() => setCurrentPage(0)}
-            onOpenCover={() => setCurrentPage(0)}
-          />
-        )}
-        {currentPage === 2 && (
-          <StatsPage2
-            onNext={() => setCurrentPage(3)}
-            onPrev={() => setCurrentPage(1)}
-          />
-        )}
-        {currentPage === 3 && (
-          <StatsPage3
-            onNext={() => setCurrentPage(4)}
-            onPrev={() => setCurrentPage(2)}
-          />
-        )}
-        {currentPage === 4 && (
-          <StatsPage4
-            onNext={() => setCurrentPage(5)}
-            onPrev={() => setCurrentPage(3)}
-          />
-        )}
-        {currentPage === 5 && (
-          <StatsPage5
-            onNext={() => setCurrentPage(6)}
-            onPrev={() => setCurrentPage(4)}
-          />
-        )}
-        {currentPage === 6 && (
-          <StatsPage6
-            onNext={() => setCurrentPage(7)}
-            onPrev={() => setCurrentPage(5)}
-            onGoToCover={() => setCurrentPage(0)}
-          />
-        )}
-        {currentPage === 7 && (
-          <AuditPage 
-            onGoHome={() => setCurrentPage(1)} 
-            onPrev={() => setCurrentPage(6)}
-            onOpenCover={() => setCurrentPage(0)}
-          />
-        )}
+  // Define all pages in an array for the 3D map
+  const pages = [
+    <CoverPage key="p0" onNext={() => setCurrentPage(1)} />,
+    <StatsPage1 key="p1" onNext={() => setCurrentPage(2)} onPrev={() => setCurrentPage(0)} />,
+    <StatsPage2 key="p2" onNext={() => setCurrentPage(3)} onPrev={() => setCurrentPage(1)} />,
+    <StatsPage3 key="p3" onNext={() => setCurrentPage(4)} onPrev={() => setCurrentPage(2)} />,
+    <StatsPage4 key="p4" onNext={() => setCurrentPage(5)} onPrev={() => setCurrentPage(3)} />,
+    <StatsPage5 key="p5" onNext={() => setCurrentPage(6)} onPrev={() => setCurrentPage(4)} />,
+    <StatsPage6 key="p6" onNext={() => setCurrentPage(7)} onPrev={() => setCurrentPage(5)} onGoToCover={() => setCurrentPage(0)} />,
+    <AuditPage key="p7" onGoHome={() => setCurrentPage(1)} onPrev={() => setCurrentPage(6)} onOpenCover={() => setCurrentPage(0)} />
+  ];
+
+  return (
+    <div className="book-shell">
+      <div className="book-scene" style={{ transform: `scale(${scale})` }}>
+        {pages.map((page, index) => {
+          const isCurrent = index === currentPage;
+          const isPast = index < currentPage;
+          const isFuture = index > currentPage;
+
+          let stateClass = "";
+          if (isCurrent) stateClass = "page--current";
+          else if (isPast) stateClass = "page--past";
+          else if (isFuture) stateClass = "page--future";
+
+          return (
+            <div
+              key={index}
+              className={`book-page ${stateClass}`}
+              style={{ zIndex: pages.length - index }}
+            >
+              {page}
+            </div>
+          );
+        })}
       </div>
-    </>
+    </div>
   );
 };
 
