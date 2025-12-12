@@ -146,7 +146,7 @@ body {
 /* Root Frame – Frame 1000010860 */
 .cover-root {
   position: relative;
-  width: 1620px;
+  width: 100%; /* CHANGED: Was 1620px, now 100% to fill 1699px container */
   height: 1960px;
   background: #ffffff;
   font-family: 'Geist', system-ui, sans-serif;
@@ -157,7 +157,7 @@ body {
 /* Bottom Dark Panel – Frame 1000010866 */
 .cover-bottom-panel {
   position: absolute;
-  width: 100%; /* Full width */
+  width: 100%; /* Fill the container exactly */
   height: 1140px;
   left: 0;
   top: 820px;
@@ -279,7 +279,7 @@ body {
 /* Root frame – from Frame 1000010860 */
 .layout-root {
   position: relative;
-  width: 1620px;
+  width: 100%; /* CHANGED: Was 1620px, now 100% to fill 1699px container */
   min-height: 1960px;
   /* Updated gradient: top-left f3f3f3 to bottom-right dadada */
   background: linear-gradient(to bottom right, #f3f3f3, #dadada);
@@ -372,13 +372,13 @@ body {
   position: absolute;
   left: 0;
   top: 820px;
-  width: 100%; /* Full width to match parent */
+  width: 100%; /* Fill the container exactly */
   height: 1140px;
   background: #2d2d2d;
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  padding: 0 80px;
+  padding: 0 0px;
   transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
