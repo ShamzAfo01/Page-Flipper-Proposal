@@ -4,17 +4,18 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>UxGeek Audit Generator</title>
-
-    <!-- Geist (Google fonts doesn’t host Geist officially; use this only if it’s working in your build) -->
-    <link
-      href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;800&display=swap"
-      rel="stylesheet"
-    />
-
-    <!-- If you’re using Vite, usually styles are imported in TS. Only keep this if your project really has /styles.css in public -->
-    <link rel="stylesheet" href="/styles.css" />
-  </head>
-
+    <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script type="importmap">
+{
+  "imports": {
+    "react": "https://aistudiocdn.com/react@^19.2.1",
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.1/",
+    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.31.0",
+    "react/": "https://aistudiocdn.com/react@^19.2.1/"
+  }
+}
+</script>
+</head>
   <body>
     <div id="root"></div>
     <script type="module" src="/index.tsx"></script>

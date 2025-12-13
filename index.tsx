@@ -1,33 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { createRoot } from 'react-dom/client';
-import { GoogleGenAI, Type, Schema } from "@google/genai";
 import './styles.css';
-
-// Initialize Gemini
-const apiKey = process.env.GEMINI_API_KEY;
-if (!apiKey) {
-  throw new Error("GEMINI_API_KEY is not set. Please set it in your environment variables.");
-}
-const ai = new GoogleGenAI({ apiKey });
-
-// Types for the Generated Audit
-interface Finding {
-  title: string;
-  description: string;
-  severity: 'High' | 'Medium' | 'Low';
-}
-
-interface AuditData {
-  productName: string;
-  executiveSummary: string;
-  scores: {
-    ux: number;
-    technical: number;
-    accessibility: number;
-  };
-  uxFindings: Finding[];
-  techFindings: Finding[];
-}
 
 // --- Mobile Blocker Component ---
 const MobileBlocker = () => {
@@ -47,23 +20,14 @@ const MobileBlocker = () => {
 };
 
 // --- Page 0: Cover Page ---
-const CoverPage = ({ onNext }: { onNext: () => void }) => {
+const CoverPage = ({ onNext, onRestart }: { onNext?: () => void, onRestart?: () => void }) => {
   return (
-    <div className="cover-root" onClick={onNext} style={{ cursor: 'pointer' }}>
-      
-      {/* Bottom Dark Panel (Background Layer) */}
+    <div className="cover-root" onClick={onNext} style={{ cursor: onNext ? 'pointer' : 'default' }}>
       <div className="cover-bottom-panel"></div>
-
-      {/* Spines */}
       <div className="cover-spine-light"></div>
       <div className="cover-spine-dark"></div>
-
-      {/* Title Row */}
       <div className="cover-title-row">
         <h1 className="cover-title">A UX &amp; Technical Audit for</h1>
-        {/* Logo SVG - Scaled 1.15x from 188px to ~216px */}
-        <div style={{ width: '216px', height: '216px', backgroundColor: '#ccc' }}></div>
-        {/*
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 500" className="cover-logo" style={{ width: '216px', height: '216px', flexShrink: 0 }}>
           <defs>
             <linearGradient id="SVGID_1_" gradientUnits="userSpaceOnUse" x1="212.2909" y1="592.3892" x2="268.8975" y2="592.3892" gradientTransform="matrix(1 0 0 1 0 -342)">
@@ -104,7 +68,7 @@ const CoverPage = ({ onNext }: { onNext: () => void }) => {
             <path fill="url(#SVGID_2_)" d="M313.7,232.7h14.6v58.6h-14.6v-6.1c-4.4,5.1-10.1,7.7-16.9,7.7c-5.9,0-11-1.4-15.5-3.9   c-4.5-2.7-7.9-6.3-10.4-11c-2.4-4.7-3.7-10-3.7-15.8c0-5.9,1.2-11.2,3.7-15.8c2.4-4.7,5.9-8.3,10.4-11.1c4.5-2.7,9.6-4,15.5-4   c6.8,0,12.5,2.6,16.9,7.7V232.7z M308.9,274.4c3.2-3.3,4.8-7.4,4.8-12.5c0-5-1.6-9.1-4.7-12.3s-7.1-4.8-11.9-4.8   c-4.5,0-8.2,1.6-11.2,5s-4.3,7.4-4.3,12.2c0,4.9,1.5,8.9,4.3,12.3c2.9,3.3,6.6,4.9,11.2,4.9C301.8,279.3,305.7,277.7,308.9,274.4z"/>
             <path fill="url(#SVGID_3_)" d="M376.8,232.7H392l-20.5,58.7c-3,8.1-7.2,14.1-12.6,18.1c-5.3,4-11.6,5.8-19,5.2v-14.1c0.5,0.1,1.2,0.1,2.1,0.1   c6.2,0,11.2-3.8,14.7-11.4L331,232.6h15.6l17.2,37.3L376.8,232.7z"/>
             <path fill="url(#SVGID_4_)" d="M468.6,291.2h-16.3l-6.1-16.5h-32.4l-6.1,16.5h-16.4l30.5-82h16.4L468.6,291.2z M430,231.1l-10.9,29h21.7   L430,231.1z"/>
-                        <path fill="url(#SVGID_5_)" d="M470.2,291.2v-82h15.2v82H470.2z"/>
+            <path fill="url(#SVGID_5_)" d="M470.2,291.2v-82h15.2v82H470.2z"/>
           </g>
           <g>
             <path fill="url(#SVGID_6_)" d="M80.3,243.6l-63.6,31.8c-2.8,1.4-2.8,5.4,0,6.8L80.3,314c1.1,0.5,2.3,0.5,3.4,0l63.6-31.8   c2.8-1.4,2.8-5.4,0-6.8l-63.6-31.8C82.6,243,81.4,243,80.3,243.6z"/>
@@ -112,756 +76,342 @@ const CoverPage = ({ onNext }: { onNext: () => void }) => {
             <path fill="url(#SVGID_8_)" d="M80.3,185.6l-63.6,31.8c-2.8,1.4-2.8,5.4,0,6.8L80.3,256c1.1,0.5,2.3,0.5,3.4,0l63.6-31.8   c2.8-1.4,2.8-5.4,0-6.8l-63.6-31.8C82.6,185.1,81.4,185.1,80.3,185.6z"/>
           </g>
         </svg>
-        */}
       </div>
-
-      {/* Logo Group */}
-      <div className="cover-brand-group">
+      <div 
+        className="cover-brand-group" 
+        onClick={(e) => {
+          if (onRestart) {
+            e.stopPropagation();
+            onRestart();
+          }
+        }}
+        style={{ cursor: onRestart ? 'pointer' : 'inherit' }}
+      >
         <div className="cover-brand-name">UxGeek</div>
         <div className="cover-dot">
           <div className="cover-dot-inner"></div>
         </div>
       </div>
-
     </div>
   );
 };
 
-// --- Page 1: Intro / Stats Page ---
+// --- Page 1 ---
 const StatsPage1 = ({ onNext, onPrev }: { onNext: () => void, onPrev: () => void }) => {
   return (
     <div className="page1-root">
-      {/* Page number */}
       <div className="page1-page-number">1</div>
-
-      {/* Text blocks */}
-      <p className="page1-line page1-in-nov">
-        In November,
-      </p>
-
-      <p className="page1-line page1-total-visits">
-        22k different people opened the PayAI’s website.
-      </p>
-
-      <p className="page1-line page1-bounce-caption">
-        Sadly, over half of them leave without clicking anything.
-      </p>
-
-      {/* Bounce chart + label */}
+      <p className="page1-line page1-in-nov">In November,</p>
+      <p className="page1-line page1-total-visits">22k different people opened the PayAI’s website.</p>
+      <p className="page1-line page1-bounce-caption">Sadly, over half of them leave without clicking anything.</p>
       <div className="page1-bounce-bars">
-        {/* 5 dark bars */}
-        <div className="bar bar--dark"></div>
-        <div className="bar bar--dark"></div>
-        <div className="bar bar--dark"></div>
-        <div className="bar bar--dark"></div>
-        <div className="bar bar--dark"></div>
-
-        {/* stacked bar (small dark + tall blue) */}
-        <div className="bar-stack">
-          <div className="bar-stack-top"></div>
-          <div className="bar-stack-bottom"></div>
-        </div>
-
-        {/* 4 blue bars */}
-        <div className="bar bar--blue"></div>
-        <div className="bar bar--blue"></div>
-        <div className="bar bar--blue"></div>
-        <div className="bar bar--blue"></div>
+        <div className="bar bar--dark"></div><div className="bar bar--dark"></div><div className="bar bar--dark"></div><div className="bar bar--dark"></div><div className="bar bar--dark"></div>
+        <div className="bar-stack"><div className="bar-stack-top"></div><div className="bar-stack-bottom"></div></div>
+        <div className="bar bar--blue"></div><div className="bar bar--blue"></div><div className="bar bar--blue"></div><div className="bar bar--blue"></div>
       </div>
-
       <div className="page1-bounce-pill">
-        <span className="pill-value">52%</span>
-        <span className="pill-dot"></span>
-        <span className="pill-label">They leave</span>
+        <span className="pill-value">52%</span><span className="pill-dot"></span><span className="pill-label">They leave</span>
       </div>
-
-      <p className="page1-line page1-mobile-intro">
-        84% of them are on their phones.
-      </p>
-
-      <p className="page1-line page1-mobile-detail">
-        18,480 people open PayAI website on their mobile phones and about 12k leave without clicking a button.
-      </p>
-
-      <p className="page1-line page1-users-question">
-        Who are these users?
-      </p>
-
-      {/* Prev Page CTA (To Cover) */}
+      <p className="page1-line page1-mobile-intro">84% of them are on their phones.</p>
+      <p className="page1-line page1-mobile-detail">18,480 people open PayAI website on their mobile phones and about 12k leave without clicking a button.</p>
+      <p className="page1-line page1-users-question">Who are these users?</p>
       <div className="page1-prev" onClick={onPrev}>
-        <div className="page1-next-arrow" style={{ transform: 'rotate(180deg)' }}>
-          <span className="page1-next-arrow-line"></span>
-          <span className="page1-next-arrow-head"></span>
-        </div>
+        <div className="page1-next-arrow" style={{ transform: 'rotate(180deg)' }}><span className="page1-next-arrow-line"></span><span className="page1-next-arrow-head"></span></div>
         <span className="page1-next-text" style={{textAlign: 'left'}}>Cover</span>
       </div>
-
-      {/* Next page CTA */}
       <div className="page1-next" onClick={onNext}>
         <span className="page1-next-text">Click Here to Next Page</span>
-        <div className="page1-next-arrow">
-          <span className="page1-next-arrow-line"></span>
-          <span className="page1-next-arrow-head"></span>
-        </div>
+        <div className="page1-next-arrow"><span className="page1-next-arrow-line"></span><span className="page1-next-arrow-head"></span></div>
       </div>
     </div>
   );
 };
 
-// --- Page 2: Stats Details ---
+// --- Page 2 ---
 const StatsPage2 = ({ onNext, onPrev }: { onNext: () => void, onPrev: () => void }) => {
   return (
     <div className="page2-root">
-      {/* Page number */}
       <div className="page2-page-number">2</div>
-
-      {/* Top data line */}
       <p className="page2-line page2-mobile-source">
         We know they are on mobile, About 10k from <span className="icon-x">
           <svg viewBox="0 0 24 24" aria-hidden="true"><g><path d="M21.742 21.75l-7.563-11.179 7.056-8.321h-2.456l-5.691 6.714-4.54-6.714H2.359l7.29 10.776L2.25 21.75h2.456l6.035-7.118 4.818 7.118h6.191-.008zM7.739 3.818L18.81 20.182h-2.447L5.29 3.818h2.447z"></path></g></svg>
-        </span>, 2k from <span className="page2-gmgn-tag">GMGN</span> and CoinGecko </p>
-
-      {/* Proof of product line */}
-      <p className="page2-line page2-proof-product">
-        They are users looking for "Proof of Product".
+        </span>, 2k from <span className="page2-gmgn-tag">GMGN</span> and CoinGecko
       </p>
-
-      {/* Bullet list items */}
-      <div className="page2-bullet-row page2-bullet-1">
-        <span className="page2-bullet-dot"></span>
-        <span className="page2-bullet-text">an item of ‘live’</span>
-      </div>
-
-      <div className="page2-bullet-row page2-bullet-2">
-        <span className="page2-bullet-dot"></span>
-        <span className="page2-bullet-text">a ‘slide’ interactive coherence</span>
-      </div>
-
-      <div className="page2-bullet-row page2-bullet-3">
-        <span className="page2-bullet-dot"></span>
-        <span className="page2-bullet-text">a story well told</span>
-      </div>
-
-      <div className="page2-bullet-row page2-bullet-4">
-        <span className="page2-bullet-dot"></span>
-        <span className="page2-bullet-text">reviews and social proof</span>
-      </div>
-
-      {/* Otherwise line */}
-      <p className="page2-line page2-otherwise">
-        otherwise, user assumes the product doesn't exist yet.
-      </p>
-
-      {/* Hence losing line */}
-      <p className="page2-line page2-hence-losing">
-        Hence, losing 12k potential holders and users a month because the mobile site is asking them to find the truth.
-      </p>
-
-      {/* Why? line */}
-      <p className="page2-line page2-why">
-        Why?
-      </p>
-
-      {/* Prev Page CTA */}
-      <div className="page2-prev" onClick={onPrev}>
-        <div className="page2-next-arrow" style={{ transform: 'rotate(180deg)' }}>
-          <span className="page2-next-arrow-line"></span>
-          <span className="page2-next-arrow-head"></span>
-        </div>
-        <span className="page2-next-text" style={{textAlign: 'left'}}>Prev Page</span>
-      </div>
-
-      {/* Next Page CTA */}
-      <div className="page2-next" onClick={onNext}>
-        <span className="page2-next-text">Next Page</span>
-        <div className="page2-next-arrow">
-          <span className="page2-next-arrow-line"></span>
-          <span className="page2-next-arrow-head"></span>
-        </div>
-      </div>
+      <p className="page2-line page2-proof-product">They are users looking for "Proof of Product".</p>
+      <div className="page2-bullet-row page2-bullet-1"><span className="page2-bullet-dot"></span><span className="page2-bullet-text">an item of ‘live’</span></div>
+      <div className="page2-bullet-row page2-bullet-2"><span className="page2-bullet-dot"></span><span className="page2-bullet-text">a ‘slide’ interactive coherence</span></div>
+      <div className="page2-bullet-row page2-bullet-3"><span className="page2-bullet-dot"></span><span className="page2-bullet-text">a story well told</span></div>
+      <div className="page2-bullet-row page2-bullet-4"><span className="page2-bullet-dot"></span><span className="page2-bullet-text">reviews and social proof</span></div>
+      <p className="page2-line page2-otherwise">otherwise, user assumes the product doesn't exist yet.</p>
+      <p className="page2-line page2-hence-losing">Hence, losing 12k potential holders and users a month because the mobile site is asking them to find the truth.</p>
+      <div className="page2-prev" onClick={onPrev}><div className="page2-next-arrow" style={{ transform: 'rotate(180deg)' }}><span className="page2-next-arrow-line"></span><span className="page2-next-arrow-head"></span></div><span className="page2-next-text" style={{textAlign: 'left'}}>Prev. Page</span></div>
+      <div className="page2-next" onClick={onNext}><span className="page2-next-text">Next Page</span><div className="page2-next-arrow"><span className="page2-next-arrow-line"></span><span className="page2-next-arrow-head"></span></div></div>
     </div>
   );
 };
 
-// --- Page 3: Additional Stats/Hooks ---
+// --- Page 3 ---
 const StatsPage3 = ({ onNext, onPrev }: { onNext: () => void, onPrev: () => void }) => {
   return (
     <div className="page3-root">
-      {/* Page number */}
       <div className="page3-page-number">3</div>
-
-      {/* Main lines */}
-      <p className="page3-line page3-subconscious">
-        They’re not looking. Users are subconsciously scanning for clarity and use.
-      </p>
-
-      <p className="page3-line page3-if-launch">
-        If the "Launch App" or "Verify" buttons are hidden behind a burger menu or below the fold,
-      </p>
-
-      <p className="page3-line page3-if-messaging">
-        If the messaging is not familiar and directing,
-      </p>
-
-      <p className="page3-line page3-if-layout">
-        If the layout is heavy and interactions are slow
-      </p>
-
-      <p className="page3-line page3-if-icons">
-        If the icons and illustrations are not storytelling.
-      </p>
-
-      <p className="page3-line page3-know-product">
-        They know what the product does but they don’t know where to start.
-      </p>
-
-      <p className="page3-line page3-hence">
-        Hence, 52% don’t click and 48% click less than 1.94 pages.
-      </p>
-
-      <p className="page3-line page3-what-now">
-        What now?
-      </p>
-
-      {/* Prev Page CTA */}
-      <div className="page3-prev" onClick={onPrev}>
-        <div className="page3-next-arrow" style={{ transform: 'rotate(180deg)' }}>
-          <span className="page3-next-arrow-line"></span>
-          <span className="page3-next-arrow-head"></span>
-        </div>
-        <span className="page3-next-text" style={{textAlign: 'left'}}>Prev Page</span>
-      </div>
-
-      {/* Next Page CTA */}
-      <div className="page3-next" onClick={onNext}>
-        <span className="page3-next-text">Next Page</span>
-        <div className="page3-next-arrow">
-          <span className="page3-next-arrow-line"></span>
-          <span className="page3-next-arrow-head"></span>
-        </div>
-      </div>
+      <p className="page3-line page3-subconscious">It is not a "bad" product, it is a subconscious disconnect between the user and the interface.</p>
+      <p className="page3-line page3-if-launch">If we are launching a product for users on X (twitter),</p>
+      <p className="page3-line page3-if-messaging">the messaging should be fast,</p>
+      <p className="page3-line page3-if-layout">the layout should be familiar,</p>
+      <p className="page3-line page3-if-icons">the icons should be recognizable.</p>
+      <p className="page3-line page3-know-product">They know the product is great, they just need the interface to not get in the way.</p>
+      <p className="page3-line page3-hence">Hence, the need for a Mobile-First Audit &amp; Fix.</p>
+      <p className="page3-line page3-what-now">What now?</p>
+      <div className="page3-prev" onClick={onPrev}><div className="page3-next-arrow" style={{ transform: 'rotate(180deg)' }}><span className="page3-next-arrow-line"></span><span className="page3-next-arrow-head"></span></div><span className="page3-next-text" style={{textAlign: 'left'}}>Prev. Page</span></div>
+      <div className="page3-next" onClick={onNext}><span className="page3-next-text">Next Page</span><div className="page3-next-arrow"><span className="page3-next-arrow-line"></span><span className="page3-next-arrow-head"></span></div></div>
     </div>
   );
 };
 
-// --- Page 4: Mobile First Fix ---
+// --- Page 4 ---
 const StatsPage4 = ({ onNext, onPrev }: { onNext: () => void, onPrev: () => void }) => {
   return (
     <div className="page4-root">
-      {/* Page number */}
       <div className="page4-page-number">4</div>
-      
-      {/* Main heading */}
-      <p className="page4-line page4-heading">
-        The Mobile-First Fix.
-      </p>
-      
-      {/* Social traffic statement */}
+      <p className="page4-line page4-heading">The Mobile-First Fix.</p>
       <p className="page4-line page4-social">
-        100% of social traffic comes from <span className="icon-x">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><g><path d="M21.742 21.75l-7.563-11.179 7.056-8.321h-2.456l-5.691 6.714-4.54-6.714H2.359l7.29 10.776L2.25 21.75h2.456l6.035-7.118 4.818 7.118h6.191-.008zM7.739 3.818L18.81 20.182h-2.447L5.29 3.818h2.447z"></path></g></svg>
-        </span>. These users are on their phones, scrolling fast.
+        100% of social traffic comes from <span className="icon-x"><svg viewBox="0 0 24 24" aria-hidden="true"><g><path d="M21.742 21.75l-7.563-11.179 7.056-8.321h-2.456l-5.691 6.714-4.54-6.714H2.359l7.29 10.776L2.25 21.75h2.456l6.035-7.118 4.818 7.118h6.191-.008zM7.739 3.818L18.81 20.182h-2.447L5.29 3.818h2.447z"></path></g></svg></span>. These users are on their phones, scrolling fast.
       </p>
-      
-      {/* Globally simplified copy + country pills */}
       <div className="page4-copy-block">
-        <p className="page4-line page4-global-copy">
-          Globally simplified copy that reads well on a vertical screen, for users from
-        </p>
-
+        <p className="page4-line page4-global-copy">Globally simplified copy that reads well on a vertical screen, for users from</p>
         <div className="page4-country-row">
-          <div className="page4-country-pill">
-            <span className="page4-pill-value">54.82%</span>
-            <span className="page4-pill-dot"></span>
-            <span className="page4-pill-flag page4-pill-flag--us" aria-label="United States"></span>
-            <span className="page4-pill-name">America</span>
-          </div>
-
-          <div className="page4-country-pill">
-            <span className="page4-pill-value">13.36%</span>
-            <span className="page4-pill-dot"></span>
-            <span className="page4-pill-flag page4-pill-flag--fr" aria-label="France"></span>
-            <span className="page4-pill-name">France</span>
-          </div>
-
-          <div className="page4-country-pill">
-            <span className="page4-pill-value">12.95%</span>
-            <span className="page4-pill-dot"></span>
-            <span className="page4-pill-flag page4-pill-flag--id" aria-label="Indonesia"></span>
-            <span className="page4-pill-name">Indonesia</span>
-          </div>
-
-          <div className="page4-country-pill">
-            <span className="page4-pill-value">7.95%</span>
-            <span className="page4-pill-dot"></span>
-            <span className="page4-pill-flag page4-pill-flag--sg" aria-label="Singapore"></span>
-            <span className="page4-pill-name">Singapore</span>
-          </div>
-
-          <div className="page4-country-pill">
-            <span className="page4-pill-value">4.93%</span>
-            <span className="page4-pill-dot"></span>
-            <span className="page4-pill-flag page4-pill-flag--de" aria-label="Germany"></span>
-            <span className="page4-pill-name">Germany</span>
-          </div>
+          <div className="page4-country-pill"><span className="page4-pill-value">54.82%</span><span className="page4-pill-dot"></span><span className="page4-pill-flag page4-pill-flag--us" aria-label="United States"></span><span className="page4-pill-name">America</span></div>
+          <div className="page4-country-pill"><span className="page4-pill-value">13.36%</span><span className="page4-pill-dot"></span><span className="page4-pill-flag page4-pill-flag--fr" aria-label="France"></span><span className="page4-pill-name">France</span></div>
+          <div className="page4-country-pill"><span className="page4-pill-value">12.95%</span><span className="page4-pill-dot"></span><span className="page4-pill-flag page4-pill-flag--id" aria-label="Indonesia"></span><span className="page4-pill-name">Indonesia</span></div>
+          <div className="page4-country-pill"><span className="page4-pill-value">7.95%</span><span className="page4-pill-dot"></span><span className="page4-pill-flag page4-pill-flag--sg" aria-label="Singapore"></span><span className="page4-pill-name">Singapore</span></div>
+          <div className="page4-country-pill"><span className="page4-pill-value">4.93%</span><span className="page4-pill-dot"></span><span className="page4-pill-flag page4-pill-flag--de" aria-label="Germany"></span><span className="page4-pill-name">Germany</span></div>
         </div>
       </div>
-
-      {/* UX improvements list + summary */}
       <div className="page4-ux-list">
         <div className="page4-ux-items">
-          <p className="page4-ux-line">
-            Larger touch targets for ‘actionable’ buttons.
-          </p>
-          <p className="page4-ux-line">
-            A slippery interaction flow.
-          </p>
-          <p className="page4-ux-line">
-            An array of social proof/partnerships/reviews.
-          </p>
-          <p className="page4-ux-line">
-            Active confirmation and feedbacks.
-          </p>
-          <p className="page4-ux-line">
-            Idempotent End-points
-          </p>
+          <p className="page4-ux-line">Larger touch targets for ‘actionable’ buttons.</p>
+          <p className="page4-ux-line">A slippery interaction flow.</p>
+          <p className="page4-ux-line">An array of social proof/partnerships/reviews.</p>
+          <p className="page4-ux-line">Active confirmation and feedbacks.</p>
+          <p className="page4-ux-line">Idempotent End-points</p>
         </div>
-
-        <p className="page4-ux-summary">
-          Just enough of all these.
-        </p>
+        <p className="page4-ux-summary">Just enough of all these.</p>
       </div>
-
-      {/* Prev Page CTA */}
-      <div className="page4-prev" onClick={onPrev}>
-        <div className="page4-next-arrow" style={{ transform: 'rotate(180deg)' }}>
-          <span className="page4-next-arrow-line"></span>
-          <span className="page4-next-arrow-head"></span>
-        </div>
-        <span className="page4-next-text" style={{textAlign: 'left'}}>Prev Page</span>
-      </div>
-
-      {/* Next Page CTA */}
-      <div className="page4-next" onClick={onNext}>
-        <span className="page4-next-text">Next Page</span>
-        <div className="page4-next-arrow">
-          <span className="page4-next-arrow-line"></span>
-          <span className="page4-next-arrow-head"></span>
-        </div>
-      </div>
+      <div className="page4-prev" onClick={onPrev}><div className="page4-next-arrow" style={{ transform: 'rotate(180deg)' }}><span className="page4-next-arrow-line"></span><span className="page4-next-arrow-head"></span></div><span className="page4-next-text" style={{textAlign: 'left'}}>Prev. Page</span></div>
+      <div className="page4-next" onClick={onNext}><span className="page4-next-text">Next Page</span><div className="page4-next-arrow"><span className="page4-next-arrow-line"></span><span className="page4-next-arrow-head"></span></div></div>
     </div>
   );
 };
 
-// --- Page 5: Process ---
+// --- Page 5 ---
 const StatsPage5 = ({ onNext, onPrev }: { onNext: () => void, onPrev: () => void }) => {
   return (
     <div className="page5-root">
-      {/* Page number */}
       <div className="page5-page-number">5</div>
-
-      {/* Intro */}
-      <p className="page5-line page5-intro">
-        I’m Samsudeen, a design engineer.
-      </p>
-
-      {/* Process steps */}
-      <p className="page5-line page5-step1">
-        I’ll be starting the 6 weeks process with a walkthrough of the product to have a solid context and define how far into the product the problem reaches.
-      </p>
-
-      <p className="page5-line page5-step2">
-        In a week, I’ll design multiple low fidelity iterations of a better performing interface with unlimited iterations till taste.
-      </p>
-
-      <p className="page5-line page5-step3">
-        In another week or 2, I’ll design the highest fidelity of the iteration and hand it off for staging.
-      </p>
-
-      <p className="page5-line page5-step4">
-        If I have to work with your engineering team, I’d love it to be in sync and I’d love to follow the same timeline.
-      </p>
-
-      <p className="page5-line page5-step5">
-        After shipping, I’d be monitoring the performance for optimisation and I’d be available for necessary implementations, for 3 weeks.
-      </p>
-
-      {/* "Why me?" */}
-      <p className="page5-line page5-why">
-        Why me?
-      </p>
-
-      {/* Prev Page CTA */}
-      <div className="page5-prev" onClick={onPrev}>
-        <div className="page5-next-arrow" style={{ transform: 'rotate(180deg)' }}>
-          <span className="page5-next-arrow-line"></span>
-          <span className="page5-next-arrow-head"></span>
-        </div>
-        <span className="page5-next-text" style={{textAlign: 'left'}}>Prev Page</span>
-      </div>
-
-      {/* Next Page CTA */}
-      <div className="page5-next" onClick={onNext}>
-        <span className="page5-next-text">Next Page</span>
-        <div className="page5-next-arrow">
-          <span className="page5-next-arrow-line"></span>
-          <span className="page5-next-arrow-head"></span>
-        </div>
-      </div>
+      <p className="page5-line page5-intro">I’m Samsudeen, a design engineer.</p>
+      <p className="page5-line page5-step1">I’ll be starting the 6 weeks process with a walkthrough of the product to have a solid context and define how far into the product the problem reaches.</p>
+      <p className="page5-line page5-step2">In a week, I’ll design multiple low fidelity iterations of a better performing interface with unlimited iterations till taste.</p>
+      <p className="page5-line page5-step3">In another week or 2, I’ll design the highest fidelity of the iteration and hand it off for staging.</p>
+      <p className="page5-line page5-step4">If I have to work with your engineering team, I’d love it to be in sync and I’d love to follow the same timeline.</p>
+      <p className="page5-line page5-step5">After shipping, I’d be monitoring the performance for optimisation and I’d be available for necessary implementations, for 3 weeks.</p>
+      <p className="page5-line page5-why">Why me?</p>
+      <div className="page5-prev" onClick={onPrev}><div className="page5-next-arrow" style={{ transform: 'rotate(180deg)' }}><span className="page5-next-arrow-line"></span><span className="page5-next-arrow-head"></span></div><span className="page5-next-text" style={{textAlign: 'left'}}>Prev. Page</span></div>
+      <div className="page5-next" onClick={onNext}><span className="page5-next-text">Next Page</span><div className="page5-next-arrow"><span className="page5-next-arrow-line"></span><span className="page5-next-arrow-head"></span></div></div>
     </div>
   );
 };
 
-// --- Page 6: Self-fulfilling prophecy ---
-const StatsPage6 = ({ onNext, onPrev, onGoToCover }: { onNext: () => void, onPrev: () => void, onGoToCover: () => void }) => {
-  return (
-    <div className="page6-root">
-      {/* Page number */}
-      <div className="page6-page-number">6</div>
-
-      {/* Main text blocks */}
-      <p className="page6-line page6-prophecy">
-        The self-fulfilling prophecy of how much hard work will go into converting the 88% increase in eyeballs to holders and paying users is the amount of work I did on executing this proposal.
-      </p>
-
-      <p className="page6-line page6-experience">
-        I used to work with YC Companies, I have over 2years of experience as a designer and a design engineer.
-      </p>
-
-      <p className="page6-line page6-friends">
-        I am friends with all my previous clients, fun to work with and I love to listen more than I talk.
-      </p>
-
-      {/* CTA Button - Now Opens Calendly */}
-      <div className="page6-build-btn" onClick={() => window.open('https://calendly.com/samsudeenafolabi/30min', '_blank')}>
-        <span className="page6-build-text">Let’s Build</span>
-      </div>
-
-      {/* “Every day we wait…” */}
-      <p className="page6-line page6-loss">
-        Every day we wait is 400 new users lost.
-      </p>
-
-      {/* Prev Page CTA */}
-      <div className="page6-prev" onClick={onPrev}>
-        <div className="page6-prev-arrow">
-          <span className="page6-prev-arrow-line"></span>
-          <span className="page6-prev-arrow-head"></span>
-        </div>
-        <span className="page6-prev-text">Prev. Page</span>
-      </div>
-
-      {/* Cover Page CTA - "Next Page" style */}
-      <div className="page6-next" onClick={onGoToCover}>
-        <span className="page6-next-text">Cover</span>
-        <div className="page6-next-arrow">
-          <span className="page6-next-arrow-line"></span>
-          <span className="page6-next-arrow-head"></span>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-
-// --- Page 7 (Audit Page): The Generator Tool ---
-const AuditPage = ({ onGoHome, onPrev, onOpenCover }: { onGoHome: () => void, onPrev: () => void, onOpenCover: () => void }) => {
-  const [inputValue, setInputValue] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [auditData, setAuditData] = useState<AuditData | null>(null);
-
-  const handleGenerate = async () => {
-    if (!inputValue.trim()) return;
-    
-    setIsLoading(true);
-    setAuditData(null);
-
-    try {
-      const schema: Schema = {
-        type: Type.OBJECT,
-        properties: {
-          productName: { type: Type.STRING },
-          executiveSummary: { type: Type.STRING, description: "A paragraph summarizing the audit." },
-          scores: {
-            type: Type.OBJECT,
-            properties: {
-              ux: { type: Type.INTEGER, description: "Score out of 100" },
-              technical: { type: Type.INTEGER, description: "Score out of 100" },
-              accessibility: { type: Type.INTEGER, description: "Score out of 100" },
-            }
-          },
-          uxFindings: {
-            type: Type.ARRAY,
-            items: {
-              type: Type.OBJECT,
-              properties: {
-                title: { type: Type.STRING },
-                description: { type: Type.STRING },
-                severity: { type: Type.STRING, enum: ["High", "Medium", "Low"] }
-              }
-            }
-          },
-          techFindings: {
-            type: Type.ARRAY,
-            items: {
-              type: Type.OBJECT,
-              properties: {
-                title: { type: Type.STRING },
-                description: { type: Type.STRING },
-                severity: { type: Type.STRING, enum: ["High", "Medium", "Low"] }
-              }
-            }
-          }
-        },
-        required: ["productName", "executiveSummary", "scores", "uxFindings", "techFindings"]
-      };
-
-      const response = await ai.models.generateContent({
-        model: 'gemini-2.5-flash',
-        contents: `Generate a detailed and professional UX & Technical audit summary for "${inputValue}". 
-        Assume you are an expert consultant (UxGeek). 
-        The "scores" should be realistic estimates based on general knowledge or typical issues for this type of product.
-        Provide 2 key UX findings and 2 technical findings.`,
-        config: {
-          responseMimeType: 'application/json',
-          responseSchema: schema,
-        }
-      });
-
-      const data = JSON.parse(response.text);
-      setAuditData(data);
-
-    } catch (error) {
-      console.error("Error generating audit:", error);
-      alert("Something went wrong. Please try again.");
-    } finally {
-      setIsLoading(false);
-    }
+// --- Page 6 ---
+const StatsPage6 = ({ onNext, onPrev, onGoToCover, isBookMode, onToggleView }: { 
+  onNext: () => void, 
+  onPrev: () => void, 
+  onGoToCover: () => void, 
+  isBookMode: boolean,
+  onToggleView: () => void 
+}) => {
+  const handleBuildClick = () => {
+    window.open("https://calendly.com/samsudeenafolabi/30min", "_blank");
   };
 
   return (
-    <div className={`layout-root ${auditData ? 'has-report' : ''}`}>
-      {/* Left Spines */}
-      <div className="spine spine--light"></div>
-      <div className="spine spine--dark"></div>
-
-      {/* Hero Section */}
-      <section className="hero">
-        <div className="hero-row">
-          <div className="hero-title">
-            <span>A UX &amp; Technical Audit for</span>
-            <input 
-              type="text" 
-              className="hero-input" 
-              placeholder="Product or Company Name"
-              value={inputValue}
-              onChange={(e) => setInputValue(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handleGenerate()}
-              style={{
-                fontSize: '64px',
-                fontFamily: 'inherit',
-                fontWeight: 600,
-                border: 'none',
-                borderBottom: '4px solid #1d45d8',
-                outline: 'none',
-                width: '100%',
-                marginTop: '10px',
-                color: '#1d45d8',
-                background: 'transparent'
-              }}
-            />
-            {isLoading && <div className="spinner" style={{marginTop: '20px', borderColor: '#1d45d8', borderTopColor: 'transparent'}}></div>}
-          </div>
-          
-          <div className="hero-mark">
-            <div className="hero-mark-block hero-mark-block--big"></div>
-            <div className="hero-mark-block hero-mark-block--small"></div>
-          </div>
+    <div className="page6-root">
+      <div className="page6-page-number">6</div>
+      <p className="page6-line page6-prophecy">The self-fulfilling prophecy of how much hard work will go into converting the 88% increase in eyeballs to holders and paying users is the amount of work I did on executing this proposal.</p>
+      <p className="page6-line page6-experience">I used to work with YC Companies, I have over 2years of experience as a designer and a design engineer.</p>
+      <p className="page6-line page6-friends">I am friends with all my previous clients, fun to work with and I love to listen more than I talk.</p>
+      
+      {/* Centered Button Group */}
+      <div className="page6-cta-group">
+        <div className="page6-build-btn" onClick={handleBuildClick}>
+          <span className="page6-build-text">Let’s Build</span>
         </div>
-      </section>
-
-      {/* Generated Report Content */}
-      <section className="report-content">
-        {auditData && (
-          <>
-            <div className="report-grid">
-              
-              {/* Main Findings Column */}
-              <div className="report-main">
-                <h2 className="report-h2">Executive Summary</h2>
-                <p className="report-p">{auditData.executiveSummary}</p>
-                
-                <h3 className="report-h3">Key UX Observations</h3>
-                {auditData.uxFindings.map((f, i) => (
-                  <div key={i} className="finding-item">
-                    <div className={`finding-severity severity-${f.severity.toLowerCase()}`}>
-                      {f.severity}
-                    </div>
-                    <div className="finding-content">
-                      <h4>{f.title}</h4>
-                      <p>{f.description}</p>
-                    </div>
-                  </div>
-                ))}
-
-                <h3 className="report-h3">Technical Notes</h3>
-                {auditData.techFindings.map((f, i) => (
-                  <div key={i} className="finding-item">
-                    <div className={`finding-severity severity-${f.severity.toLowerCase()}`}>
-                      {f.severity}
-                    </div>
-                    <div className="finding-content">
-                      <h4>{f.title}</h4>
-                      <p>{f.description}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              {/* Sidebar Scores Column */}
-              <div className="report-sidebar">
-                  <div className="score-card">
-                    <div className="score-value">{auditData.scores.ux}</div>
-                    <div className="score-label">UX Index</div>
-                  </div>
-                  <div className="score-card">
-                    <div className="score-value">{auditData.scores.technical}</div>
-                    <div className="score-label">Tech Health</div>
-                  </div>
-                  <div className="score-card">
-                    <div className="score-value">{auditData.scores.accessibility}</div>
-                    <div className="score-label">A11y Score</div>
-                  </div>
-              </div>
-
-            </div>
-          </>
-        )}
-      </section>
-
-      {/* Bottom Footer - Now clickable to return home */}
-      <section className="bottom-panel">
-        <div className="bottom-content" onClick={onGoHome} style={{cursor: 'pointer'}}>
-          <div className="brand-wordmark">UxGeek</div>
-          <div className="brand-dot">
-            <div className="brand-dot-inner"></div>
-          </div>
-        </div>
-      </section>
-
-      {/* Prev Page CTA - Moved after footer for z-index visibility */}
-      <div className="page1-prev" onClick={onPrev} style={{ left: '80px', zIndex: 10 }}>
-        <div className="page1-next-arrow" style={{ transform: 'rotate(180deg)' }}>
-          <span className="page1-next-arrow-line"></span>
-          <span className="page1-next-arrow-head"></span>
-        </div>
-        <span className="page1-next-text">Prev Page</span>
-      </div>
-
-      {/* Open Cover CTA - New Button */}
-      <div className="page1-next" onClick={onOpenCover} style={{ left: 'auto', right: '80px', top: '1817px', width: 'auto', gap: '20px', zIndex: 10 }}>
-        <span className="page1-next-text" style={{marginRight: '0'}}>Open Cover</span>
-        <div className="page1-next-arrow">
-          <span className="page1-next-arrow-line"></span>
-          <span className="page1-next-arrow-head"></span>
+        <div className="page6-view-single-btn" onClick={onToggleView}>
+          <span className="page6-view-single-text">
+            {isBookMode ? "View single page" : "View two pages"}
+          </span>
         </div>
       </div>
 
+      <p className="page6-line page6-loss">Every day we wait is 400 new users lost.</p>
+      <div className="page6-prev" onClick={onPrev}>
+        <div className="page6-prev-arrow"><span className="page6-prev-arrow-line"></span><span className="page6-prev-arrow-head"></span></div>
+        <span className="page6-prev-text">Prev. Page</span>
+      </div>
+      <div className="page6-next" onClick={onGoToCover}>
+        <span className="page6-next-text">Cover</span>
+        <div className="page6-next-arrow"><span className="page6-next-arrow-line"></span><span className="page6-next-arrow-head"></span></div>
+      </div>
     </div>
   );
 };
 
-// --- Main App: Handles Routing/Scaling ---
+// --- App Component ---
 const App = () => {
-  return <CoverPage onNext={() => {}} />;
-};
-
-/*
-const App = () => {
-  const [currentPage, setCurrentPage] = useState<number>(0);
-  const [scale, setScale] = useState(1);
+  const [currentPage, setCurrentPage] = useState(0);
   const [isMobile, setIsMobile] = useState(false);
+  const [isBookMode, setIsBookMode] = useState(true);
+  const scalerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const handleResize = () => {
-      const width = window.innerWidth;
-      
-      // Check if mobile (width < 1024px)
-      if (width < 1024) {
-        setIsMobile(true);
-        return; // Don't calculate scale if mobile
-      }
-      setIsMobile(false);
-
-      // Dimensions of the content book
-      const bookWidth = 1699; 
-      const bookHeight = 1960;
-      
-      // Target: 3/4 width of viewport, 4/5 height of viewport
-      const targetWidth = window.innerWidth * 0.75;
-      const targetHeight = window.innerHeight * 0.8;
-
-      // Calculate scale to fit EITHER width OR height constraint
-      const scaleW = targetWidth / bookWidth;
-      const scaleH = targetHeight / bookHeight;
-      
-      // Use the smaller scale to ensure it fits both constraints
-      const newScale = Math.min(scaleW, scaleH);
-      
-      setScale(newScale);
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 1024);
     };
-    
-    window.addEventListener('resize', handleResize);
-    handleResize(); // Initial call
-    return () => window.removeEventListener('resize', handleResize);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  if (isMobile) {
-    return <MobileBlocker />;
-  }
+  // Scale logic
+  useEffect(() => {
+    const handleResize = () => {
+      if (scalerRef.current) {
+        // In book mode, base width is effectively double (3398), single is 1699.
+        const baseWidth = isBookMode ? 3398 : 1699;
+        const baseHeight = 1960;
+        
+        const scaleX = window.innerWidth / baseWidth;
+        const scaleY = window.innerHeight / baseHeight;
+        // Use a slightly more conservative scale to ensure fit
+        const scale = Math.min(scaleX, scaleY) * 0.95; 
+        
+        scalerRef.current.style.transform = `scale(${scale})`;
+      }
+    };
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [isBookMode]);
 
-  // Define all pages in an array for the 3D map
+  // Page Components Array
+  // Index: 0=Cover, 1=P1, 2=P2, 3=P3, 4=P4, 5=P5, 6=P6, 7=Back Cover
   const pages = [
-    <CoverPage key="p0" onNext={() => setCurrentPage(1)} />,
-    <StatsPage1 key="p1" onNext={() => setCurrentPage(2)} onPrev={() => setCurrentPage(0)} />,
-    <StatsPage2 key="p2" onNext={() => setCurrentPage(3)} onPrev={() => setCurrentPage(1)} />,
-    <StatsPage3 key="p3" onNext={() => setCurrentPage(4)} onPrev={() => setCurrentPage(2)} />,
-    <StatsPage4 key="p4" onNext={() => setCurrentPage(5)} onPrev={() => setCurrentPage(3)} />,
-    <StatsPage5 key="p5" onNext={() => setCurrentPage(6)} onPrev={() => setCurrentPage(4)} />,
-    <StatsPage6 key="p6" onNext={() => setCurrentPage(7)} onPrev={() => setCurrentPage(5)} onGoToCover={() => setCurrentPage(0)} />,
-    <AuditPage key="p7" onGoHome={() => setCurrentPage(1)} onPrev={() => setCurrentPage(6)} onOpenCover={() => setCurrentPage(0)} />
+    <CoverPage key="cover" onNext={() => goNext()} />,
+    <StatsPage1 key="p1" onNext={() => goNext()} onPrev={() => goPrev()} />,
+    <StatsPage2 key="p2" onNext={() => goNext()} onPrev={() => goPrev()} />,
+    <StatsPage3 key="p3" onNext={() => goNext()} onPrev={() => goPrev()} />,
+    <StatsPage4 key="p4" onNext={() => goNext()} onPrev={() => goPrev()} />,
+    <StatsPage5 key="p5" onNext={() => goNext()} onPrev={() => goPrev()} />,
+    <StatsPage6 
+      key="p6" 
+      onNext={() => goNext()} 
+      onPrev={() => goPrev()} 
+      onGoToCover={() => setCurrentPage(0)} 
+      isBookMode={isBookMode}
+      onToggleView={() => toggleViewMode()}
+    />,
+    <CoverPage key="back-cover" onRestart={() => setCurrentPage(0)} /> 
   ];
+
+  const toggleViewMode = () => {
+    setIsBookMode(prev => {
+      const nextMode = !prev;
+      // Snap logic when entering book mode
+      if (nextMode) {
+        // If current is even (right page) and not last/first, snap to odd (left page)
+        if (currentPage > 0 && currentPage < pages.length - 1 && currentPage % 2 === 0) {
+          setCurrentPage(currentPage - 1);
+        }
+      }
+      return nextMode;
+    });
+  };
+
+  const goNext = () => {
+    if (currentPage < pages.length - 1) {
+      if (isBookMode) {
+        // If cover (0), go to 1 (Spread 1-2)
+        if (currentPage === 0) setCurrentPage(1);
+        // If spread (1, 3, 5), jump +2
+        else if (currentPage < pages.length - 2) setCurrentPage(c => c + 2);
+        // If last spread, go to Back Cover
+        else setCurrentPage(c => c + 1);
+      } else {
+        setCurrentPage(c => c + 1);
+      }
+    }
+  };
+
+  const goPrev = () => {
+    if (currentPage > 0) {
+      if (isBookMode) {
+        // If Back Cover (7), go to last spread 5
+        if (currentPage === 7) setCurrentPage(5);
+        else if (currentPage > 1) setCurrentPage(c => c - 2);
+        else setCurrentPage(0);
+      } else {
+        setCurrentPage(c => c - 1);
+      }
+    }
+  };
+
+  if (isMobile) return <MobileBlocker />;
 
   return (
     <div className="book-shell">
-      <div className="book-scene" style={{ transform: `scale(${scale})` }}>
-        {pages.map((page, index) => {
-          const isCurrent = index === currentPage;
-          const isPast = index < currentPage;
-          const isFuture = index > currentPage;
+      <div ref={scalerRef} className="book-scaler">
+        <div className={`book-scene ${isBookMode ? 'is-book' : ''}`}>
+          {pages.map((page, index) => {
+            let stateClass = "";
+            let spreadClass = "";
+            
+            if (isBookMode) {
+               // BOOK MODE LOGIC
+               // Check visibility
+               const isVisible = 
+                  (currentPage === 0 && index === 0) ||
+                  (currentPage === 7 && index === 7) ||
+                  (currentPage === index) || // Left page of spread
+                  (currentPage === index - 1 && currentPage > 0 && currentPage < 7); // Right page of spread
 
-          let stateClass = "";
-          if (isCurrent) stateClass = "page--current";
-          else if (isPast) stateClass = "page--past";
-          else if (isFuture) stateClass = "page--future";
+               if (isVisible) {
+                 stateClass = "page--current";
+                 if (index === 0 || index === 7) spreadClass = "spread-center";
+                 else if (index % 2 !== 0) spreadClass = "spread-left"; // Odd index = Left page
+                 else spreadClass = "spread-right"; // Even index = Right page
+               } else {
+                 if (index < currentPage) stateClass = "page--past";
+                 else stateClass = "page--future";
+               }
 
-          return (
-            <div
-              key={index}
-              className={`book-page ${stateClass}`}
-              style={{ zIndex: pages.length - index }}
-            >
-              {page}
-            </div>
-          );
-        })}
+            } else {
+              // SINGLE MODE LOGIC
+              if (index === currentPage) stateClass = "page--current";
+              else if (index < currentPage) stateClass = "page--past";
+              else stateClass = "page--future";
+            }
+
+            return (
+              <div key={index} className={`book-page ${stateClass} ${spreadClass}`} style={{ zIndex: pages.length - index }}>
+                {page}
+              </div>
+            );
+          })}
+        </div>
       </div>
     </div>
   );
 };
-*/
 
-const rootElement = document.getElementById('root');
-if (rootElement) {
-  createRoot(rootElement).render(<App />);
-}
+const root = createRoot(document.getElementById('root')!);
+root.render(<App />);
