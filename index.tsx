@@ -4,7 +4,11 @@ import { GoogleGenAI, Type, Schema } from "@google/genai";
 import './styles.css';
 
 // Initialize Gemini
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+const apiKey = process.env.GEMINI_API_KEY;
+if (!apiKey) {
+  throw new Error("GEMINI_API_KEY is not set. Please set it in your environment variables.");
+}
+const ai = new GoogleGenAI({ apiKey });
 
 // Types for the Generated Audit
 interface Finding {
@@ -58,6 +62,8 @@ const CoverPage = ({ onNext }: { onNext: () => void }) => {
       <div className="cover-title-row">
         <h1 className="cover-title">A UX &amp; Technical Audit for</h1>
         {/* Logo SVG - Scaled 1.15x from 188px to ~216px */}
+        <div style={{ width: '216px', height: '216px', backgroundColor: '#ccc' }}></div>
+        {/*
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 500" className="cover-logo" style={{ width: '216px', height: '216px', flexShrink: 0 }}>
           <defs>
             <linearGradient id="SVGID_1_" gradientUnits="userSpaceOnUse" x1="212.2909" y1="592.3892" x2="268.8975" y2="592.3892" gradientTransform="matrix(1 0 0 1 0 -342)">
@@ -106,6 +112,7 @@ const CoverPage = ({ onNext }: { onNext: () => void }) => {
             <path fill="url(#SVGID_8_)" d="M80.3,185.6l-63.6,31.8c-2.8,1.4-2.8,5.4,0,6.8L80.3,256c1.1,0.5,2.3,0.5,3.4,0l63.6-31.8   c2.8-1.4,2.8-5.4,0-6.8l-63.6-31.8C82.6,185.1,81.4,185.1,80.3,185.6z"/>
           </g>
         </svg>
+        */}
       </div>
 
       {/* Logo Group */}
@@ -766,6 +773,11 @@ const AuditPage = ({ onGoHome, onPrev, onOpenCover }: { onGoHome: () => void, on
 
 // --- Main App: Handles Routing/Scaling ---
 const App = () => {
+  return <CoverPage onNext={() => {}} />;
+};
+
+/*
+const App = () => {
   const [currentPage, setCurrentPage] = useState<number>(0);
   const [scale, setScale] = useState(1);
   const [isMobile, setIsMobile] = useState(false);
@@ -847,6 +859,7 @@ const App = () => {
     </div>
   );
 };
+*/
 
 const rootElement = document.getElementById('root');
 if (rootElement) {
